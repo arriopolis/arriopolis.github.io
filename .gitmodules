@@ -1,0 +1,3 @@
+[submodule "nonograms"]
+	path = nonograms
+	url = https://github.com/arriopolis/nonograms.git
