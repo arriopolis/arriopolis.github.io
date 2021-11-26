@@ -1,0 +1,283 @@
+<html>
+  <head>
+    <title>Restricted Queen's Game</title>
+    <style>
+      table {
+        border : 1px solid black;
+      }
+      td {
+        height : 40px;
+        width : 40px;
+        border-left : 1px solid black;
+        border-top : 1px solid black;
+        margin : 0;
+        padding : 0;
+        text-align : center;
+      }
+      td:last-child {
+        border-right : 1px solid black;
+      }
+      tr:last-child td {
+        border-bottom : 1px solid black;
+      }
+      td.active:hover {
+        cursor : pointer;
+        background-color : grey;
+      }
+
+      td.lost_display {
+        background-color : red;
+      }
+
+      .dot {
+        height : 20px;
+        width : 20px;
+        background-color : black;
+        border-radius : 50%;
+        display : inline-block;
+      }
+      .selector_dot {
+        height : 10px;
+        width : 10px;
+        background-color : lightgrey;
+        border-radius : 50%;
+        display : inline-block;
+      }
+
+      #status {
+        font-size : 14pt;
+        font-weight : bold;
+      }
+    </style>
+    <script>
+      function check_lost(x,y) {
+        if (x == 0 && y == 0) return true;
+        if (x == 0 || y == 0) return false;
+
+        if (x > y) {
+          [x,y] = [y,x]
+        }
+        fibs = [1,2]
+        while (fibs[fibs.length-1] < y) {
+          fibs.push(fibs[fibs.length-1] + fibs[fibs.length-2])
+        }
+
+        var tmpx = x
+        var tmpy = y
+        var strx = ''
+        var stry = ''
+        for (var i = fibs.length-1; i >= 0; i--) {
+          f = fibs[i]
+
+          if (tmpx > f) {
+            tmpx -= f
+            strx += '1'
+          } else {
+            strx += '0'
+          }
+
+          if (tmpy > f) {
+            tmpy -= f
+            stry += '1'
+          } else {
+            stry += '0'
+          }
+        }
+
+        // console.log(x,y,strx,stry)
+        return (stry[stry.length-1] == '1' && strx == '0' + stry.slice(0,-1))
+      }
+
+      function toggle_hints() {
+        var tbl = document.getElementById('game').firstChild
+        for (var y = 0, row; row = tbl.rows[y]; y++) {
+          for (var x = 0, cell; cell = row.cells[x]; x++) {
+            if (cell.classList.contains('lost')) {
+              cell.classList.remove('lost')
+              cell.classList.add('lost_display')
+            } else if (cell.classList.contains('lost_display')) {
+              cell.classList.remove('lost_display')
+              cell.classList.add('lost')
+            }
+          }
+        }
+      }
+
+      function make_move(startx,starty) {
+        // Make the move
+        tbl = document.getElementById('game').firstChild
+        for (var y = 0, row; row = tbl.rows[y]; y++) {
+          for (var x = 0, cell; cell = row.cells[x]; x++) {
+            if (x == startx && y == starty) {
+              cell.innerHTML = ''
+              s = document.createElement('span')
+              s.setAttribute('class', 'dot')
+              cell.appendChild(s)
+            } else if (cell.classList.contains('active')) {
+              cell.innerHTML = ''
+              cell.classList.remove('active')
+              cell.removeAttribute('onclick')
+            }
+          }
+        }
+        document.getElementById('status').innerHTML = 'Waiting for computer\'s move...'
+
+        setTimeout(
+          function () {
+            if (startx == 0 && starty == 0) {
+              var win = true
+            } else {
+              var win = false
+              var found_move = false
+              for (var x = 0; x < startx; x++) {
+                if (check_lost(x,starty)) {
+                  startx = x
+                  found_move = true
+                  break
+                }
+              }
+              if (!found_move) {
+                for (var y = 0; y < starty; y++) {
+                  if (check_lost(startx,y)) {
+                    starty = y
+                    found_move = true
+                    break
+                  }
+                }
+              }
+              if (!found_move) {
+                for (var i = 1; i <= Math.min(startx,starty); i++) {
+                  if (check_lost(startx-i,starty-i)) {
+                    startx -= i
+                    starty -= i
+                    found_move = true
+                    break
+                  }
+                }
+              }
+              if (!found_move) {startx -= 1}
+              if (startx == 0 && starty == 0) {
+                var lose = true
+              } else {
+                var lose = false
+              }
+            }
+
+            tbl = document.getElementById('game').firstChild
+            for (var y = 0, row; row = tbl.rows[y]; y++) {
+              for (var x = 0, cell; cell = row.cells[x]; x++) {
+                if (x == startx && y == starty) {
+                  cell.innerHTML = ''
+                  s = document.createElement('span')
+                  s.setAttribute('class', 'dot')
+                  cell.appendChild(s)
+                  cell.classList.add('active')
+                  if (!win && !lose) {cell.setAttribute('onclick', 'display_moves(' + x + ',' + y + ')')}
+                } else if (cell.classList.contains('active')) {
+                  cell.innerHTML = ''
+                  cell.classList.remove('active')
+                  cell.removeAttribute('onclick')
+                } else {
+                  cell.innerHTML = ''
+                }
+              }
+            }
+
+            if (win) {
+              document.getElementById('status').innerHTML = 'You won!'
+              document.getElementById('status').style.color = 'green'
+            } else if (lose) {
+              document.getElementById('status').innerHTML = 'You lost!'
+              document.getElementById('status').style.color = 'red'
+            } else {
+              document.getElementById('status').innerHTML = 'You are to move'
+            }
+          }, (startx == 0 && starty == 0 ? 0 : 2000))
+      }
+
+      function display_moves(startx, starty) {
+        var tbl = document.getElementById('game').firstChild
+        for (var y = 0, row; row = tbl.rows[y]; y++) {
+          for (var x = 0, cell; cell = row.cells[x]; x++) {
+            if (x == startx && y < starty || x < startx && y == starty || x < startx && y < starty && startx - x == starty - y) {
+              if (cell.classList.contains('active')) {
+                cell.innerHTML = ''
+                cell.classList.remove('active')
+                cell.removeAttribute('onclick')
+              } else {
+                s = document.createElement('span')
+                s.setAttribute('class', 'selector_dot')
+                cell.appendChild(s)
+                cell.classList.add('active')
+                cell.setAttribute('onclick', 'make_move(' + x + ',' + y + ')')
+              }
+            }
+          }
+        }
+      }
+
+      function start_game() {
+        var height = parseInt(document.getElementById('height').value)
+        var width = parseInt(document.getElementById('width').value)
+
+        if (height < 1 || width < 1 || isNaN(height) || isNaN(width)) {
+          alert("Both the height and width have to be positive.")
+          return
+        }
+
+        var starty = Math.floor(Math.random() * height)
+        var startx = Math.floor(Math.random() * width)
+
+        if (startx == 0 && starty == 0) {
+          var lose = true
+        } else {
+          var lose = false
+        }
+
+        var tbl = document.createElement('table')
+        tbl.setAttribute('cellspacing', 0)
+        for (var y = 0; y < height; y++) {
+          var row = tbl.insertRow(-1)
+          for (var x = 0; x < width; x++) {
+            var cell = row.insertCell(-1)
+            if (y == starty && x == startx) {
+              s = document.createElement('span')
+              s.setAttribute('class', 'dot')
+              cell.appendChild(s)
+              cell.classList.add('active')
+              if (!lose) {cell.setAttribute('onclick', 'display_moves(' + startx + ',' + starty + ')')}
+            }
+            if (check_lost(x,y)) {
+              cell.classList.add('lost')
+            }
+          }
+        }
+
+        var game = document.getElementById('game')
+        game.innerHTML = ""
+        game.appendChild(tbl)
+
+        document.getElementById('status').innerHTML = 'You are to move'
+        document.getElementById('status').style.color = 'black'
+        if (lose) {
+          document.getElementById('status').innerHTML = 'You lost!'
+          document.getElementById('status').style.color = 'red'
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <center>
+      <h1>Restricted Queen's Game <i>(Wythoff's game)</i></h1>
+      <input id = 'height' placeholder = 'Height'/>
+      <input id = 'width' placeholder = 'Width'/>
+      <button onclick='start_game()'>Start game!</button>
+      <button onclick='toggle_hints()'>Toggle hints</button>
+      <hr>
+      <div id = 'game'>
+        <i>Set the dimensions first and hit Start Game!</i>
+      </div>
+      <div id = 'status'></div>
+    </center>
+  </body>
+</html>
