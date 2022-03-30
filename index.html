@@ -2,8 +2,19 @@
 <head>
 <title>Arjan Cornelissen</title>
 <link rel = 'stylesheet' href = 'stylesheet.css' type = 'text/css'/>
+<script>
+  function get_last_update() {
+    var xhttp = new XMLHttpRequest()
+    xhttp.onload = function() {
+      var x = new Date(JSON.parse(this.responseText).commit.commit.author.date)
+      document.getElementById('last_update').innerHTML = x.toDateString()
+    }
+    xhttp.open('GET', 'https://api.github.com/repos/arriopolis/arriopolis.github.io/branches/master', true)
+    xhttp.send()
+  }
+</script>
 </head>
-<body>
+<body onload = 'get_last_update()'>
 <div id = 'main'>
   <h1>Arjan Cornelissen</h1>
   <hr/>
@@ -28,7 +39,7 @@
       Arjan Cornelissen, Nikhil S. Mande, Subhasree Patro.
       <a href = 'https://arxiv.org/pdf/2203.02968.pdf' target = 'blank_'>Improved Quantum Query Upper Bounds Based on Classical Decision Trees</a>.<br/>
       Preprint available at <a href = 'https://arxiv.org/abs/2203.02968' target = 'blank_'>arXiv:2203.02968</a>.
-    </li>
+    </li>last_update
     <li>
       Arjan Cornelissen, Nikhil S. Mande, Maris Ozols, Ronald de Wolf.
       <a href = 'https://arxiv.org/pdf/2112.14682.pdf' target = 'blank_'>Exact quantum query complexity of computing Hamming weight modulo powers of two and three</a>.<br/>
@@ -198,6 +209,7 @@
     <li><a href = 'wythoff/game.html' target = 'blank_'>Wythoff's game</a>.</li>
     <li><a href = 'https://www.youtube.com/watch?v=RdtaYDb3HYE&list=PL03D3C2A2B54913D1' target = 'blank_'>Video series</a> on how to solve the Rubik's cube (very old and in Dutch).</li>
   </ul>
+  <p style = 'color:lightgray;margin-bottom:-2px;margin-left:5px;'>Latest update: <span id = 'last_update'></span>.</p>
 </div>
 </body>
 </html>
